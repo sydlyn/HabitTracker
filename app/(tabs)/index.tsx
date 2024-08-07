@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { 
 	SafeAreaView, 
 	View,
@@ -8,12 +8,16 @@ import {
 	StyleSheet 
 } from 'react-native';
 
-import { custColors, opaqueColors } from '@/constants/Colors'
+import { custColors, opaqueColors } from '@/constants/Colors';
+
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function MainScreen() {
 	const [clickCounter, setClickCounter] = useState(0);
 	const [dateAndTime, setDateAndTime] = useState('');
 	const [instances, setInstances] = useState([] as string[]);
+
+	const scrollViewRef = useRef<ScrollView | null>(null);
 
 	const getDateAndTime = () => {
 		const date = new Date().getDate() 
@@ -35,13 +39,18 @@ export default function MainScreen() {
 		)
 	}
 
-	const handlePress = () => {
+	const handleNewInstance = () => {
 		setDateAndTime(getDateAndTime());
 		setClickCounter(clickCounter + 1);
 	}
 
+	const handleClearInstances = () => {
+		setClickCounter(0);
+		setInstances([]);
+	}
+
 	useEffect(() => {
-    if (dateAndTime) {
+    if (clickCounter) {
       setInstances([...instances, "instance at: " + dateAndTime]);
     }
   }, [clickCounter, dateAndTime]); 
@@ -49,10 +58,20 @@ export default function MainScreen() {
 	return (
 		<SafeAreaView style={styles.pageStyle}>
 			{/* header title */}
-			<Text style={styles.titleText}>habit tracker</Text>
+			<View style={{flexDirection: 'row'}}>
+				<Text style={styles.titleText}>habit tracker</Text>
+				<MaterialIcons 
+					style={styles.clearIcon} 
+					name="clear" size={30} color="white" 
+					onPress={() => handleClearInstances()}
+				/>
+			</View>
 
 			{/* instance list */}
-			<ScrollView>
+			<ScrollView 
+				ref={scrollViewRef}
+      	onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+			>
 				{instances.map((inst, index) => (
 					<View key={index} style={{padding: 2}}>
 						<View key={index} style={styles.instanceBar}>
@@ -62,16 +81,14 @@ export default function MainScreen() {
 				))}
 			</ScrollView>
 
-			{/* bottom buttons */}
+
+			{/* add new instance button */}
 			<View style={styles.pageBottomStyle}>
-				<View style={styles.instanceCounter}>
-					<Text style={styles.instanceCounter}>{clickCounter}</Text>
-				</View>
 				<Pressable 
 					style={styles.newInstanceButton} 
-					onPress={() => handlePress()}
+					onPress={() => handleNewInstance()}
 				>
-					<Text style={styles.buttonText}>new fidget</Text>
+					<Text style={styles.buttonText}>+</Text>
 				</Pressable>
 			</View>
 		</SafeAreaView>
@@ -83,15 +100,16 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: custColors.sageGreen,
 	},
-	pageBottomStyle: {
-		flexDirection: 'row',
-		paddingBottom: 10
-	},
 	titleText: {
 		color: 'white',
 		fontSize: 40,
 		paddingHorizontal: 20,
 		paddingBottom: 10
+	},
+	clearIcon: {
+		marginLeft: 'auto',
+		paddingHorizontal: 20,
+		alignSelf: 'center'
 	},
 	instanceBar: {
 		backgroundColor: opaqueColors.darkGrey,
@@ -106,23 +124,23 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 10,
 		paddingVertical: 5,
 	},
-	instanceCounter: {
-		color: custColors.darkSageGreen,
-		backgroundColor: 'white',
-		padding: 10,
-		borderRadius: 20,
-		marginLeft: 'auto',
+	pageBottomStyle: {
+		flexDirection: 'row',
+		paddingVertical: 15,
+		paddingRight: 25,
 	},
 	newInstanceButton: {
 		backgroundColor: 'white',
 		marginLeft: 'auto',
-		marginRight: 'auto',
 		padding: 20,
-		width: '70%',
-		borderRadius: 20,
+		width: 75,
+		height: 75,
+		borderRadius: 60,
+		justifyContent: 'center',
 		alignItems: 'center',
 	},
 	buttonText: {
-		color: custColors.darkSageGreen
+		color: custColors.darkSageGreen,
+		fontSize: 30,
 	}
 });
